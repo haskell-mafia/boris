@@ -10,7 +10,10 @@ import           Boris.Store.Build (BuildData (..), LogData (..))
 import           Boris.Client.Http (BorisHttpClientError (..))
 import qualified Boris.Client.Http as H
 
+import           Control.Monad.IO.Class (liftIO)
+
 import           Data.Aeson (FromJSON (..), ToJSON (..), object, withObject, (.:), (.:?))
+import qualified Data.Text.IO as T
 
 import           Jebediah.Data (GroupName (..), StreamName (..))
 
@@ -23,9 +26,12 @@ import           System.IO (IO)
 import           X.Control.Monad.Trans.Either (EitherT)
 
 trigger :: BalanceConfig -> Project -> Build -> EitherT BorisHttpClientError IO BuildData
-trigger c p b =
-  fmap getBuild $
+trigger c p b = do
+  liftIO $ T.putStrLn "triggering build..."
+  x <- fmap getBuild $
     H.post c ["project", renderProject p , "build", renderBuild b] PostBuildRequest
+  liftIO $ T.putStrLn "build triggered...."
+  pure x
 
 fetch :: BalanceConfig -> BuildId -> EitherT BorisHttpClientError IO (Maybe BuildData)
 fetch c i =

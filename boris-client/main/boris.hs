@@ -83,7 +83,9 @@ parser =
 run :: Environment -> Cli -> IO ()
 run e c = case c of
   Trigger t p b _r -> do
+    T.putStrLn "trying to construct config"
     bc <- mkBalanceConfig
+    T.putStrLn "trying to trigger"
     d <- orDie renderBorisHttpClientError $ B.trigger bc p b
     T.hPutStrLn stderr $ mconcat ["boris submitted [", renderBuildId . buildDataId $ d, "]"]
     when (t == Tail) $ do
