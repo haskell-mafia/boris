@@ -24,6 +24,7 @@ library
                     , ambiata-snooze
                     , ambiata-snooze-baton
                     , ambiata-twine
+                    , ambiata-volt
                     , ambiata-x-aeson
                     , ambiata-x-eithert
                     , amazonka-dynamodb               >= 1.3.6      && < 1.5
