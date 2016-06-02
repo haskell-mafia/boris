@@ -31,28 +31,24 @@ import           System.IO (IO)
 
 import           X.Control.Monad.Trans.Either (EitherT, newEitherT, bimapEitherT, hoistEither, left)
 
-import qualified Volt.Data.Config as Volt
-import qualified Volt.Data.Request as Volt
-import qualified Volt.Http.Raw as Volt
+import qualified Volt.Data.Config as V
+import qualified Volt.Data.Request as V
+import qualified Volt.Http.Raw as V
 
 data BorisHttpClientError =
     BorisHttpClientBalanceError BalanceError
   | BorisHttpClientDecodeError Text
   | BorisHttpClientUnhandledResponseError (H.Response BL.ByteString)
-  | BorisHttpClientVoltError Volt.VoltHttpError
+  | BorisHttpClientVoltError V.VoltHttpError
 
 borisVersion :: ByteString
 borisVersion =
   "application/vnd.ambiata.boris.v1+json"
 
-delete :: Volt.VoltConfig {-BalanceConfig-} -> [Text] -> EitherT BorisHttpClientError IO ()
+delete :: V.VoltConfig {-BalanceConfig-} -> [Text] -> EitherT BorisHttpClientError IO ()
 delete conf url = do
   res <- bimapEitherT BorisHttpClientVoltError id $
-    Volt.delete
-      conf
---      (Volt.VoltConfig (balanceConfigHttpManager b) (remoteRetryPolicy b) Volt.BalanceTable)
-      (Volt.http "boris.ambiata.com" (fmap T.encodeUtf8 url))
-      (Volt.content borisVersion)
+    V.delete conf (V.volt "boris" $ fmap T.encodeUtf8 url) (V.content borisVersion)
 
   case H.responseStatus res of
     Status 202 _ ->

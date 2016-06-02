@@ -281,7 +281,10 @@ mkVoltConfig = do
   ms <- getManagerSettings
   mgr <- newManager ms
   let re = exponentialBackoff 200000 {- 0.2s -} <> limitRetries 5
-  pure $ VoltConfig mgr re Volt.BalanceTable
+  h <- Volt.Host <$> text "HOST"
+  p <- Volt.Port <$> intOr "PORT" 11111
+  let t = Volt.BalanceTable [(Volt.VoltKey "boris", Volt.BalanceEntry h p (Volt.Weight 1))]
+  pure $ VoltConfig mgr re t
 
 socksProxyKey :: String
 socksProxyKey =
