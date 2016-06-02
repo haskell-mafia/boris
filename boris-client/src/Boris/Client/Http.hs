@@ -45,21 +45,15 @@ borisVersion :: ByteString
 borisVersion =
   "application/vnd.ambiata.boris.v1+json"
 
-delete :: BalanceConfig -> [Text] -> EitherT BorisHttpClientError IO ()
-delete b url = do
+delete :: Volt.VoltConfig {-BalanceConfig-} -> [Text] -> EitherT BorisHttpClientError IO ()
+delete conf url = do
   res <- bimapEitherT BorisHttpClientVoltError id $
     Volt.delete
-      (Volt.VoltConfig (balanceConfigHttpManager b) (remoteRetryPolicy b) Volt.BalanceTable)
+      conf
+--      (Volt.VoltConfig (balanceConfigHttpManager b) (remoteRetryPolicy b) Volt.BalanceTable)
       (Volt.http "boris.ambiata.com" (fmap T.encodeUtf8 url))
-      mempty
+      (Volt.content borisVersion)
 
-{-
-  res <- bimapEitherT BorisHttpClientBalanceError id . newEitherT . runBalanceT b . httpBalanced $ \r -> r {
-      H.path = encodePathSegmentsBS url
-    , H.requestHeaders = [(HTTP.hContentType, borisVersion)]
-    , H.method = HTTP.methodDelete
-    }
--}
   case H.responseStatus res of
     Status 202 _ ->
       pure ()
@@ -117,3 +111,5 @@ renderBorisHttpClientError err =
       mconcat ["Could not decode response from server: ", t]
     BorisHttpClientUnhandledResponseError res ->
       mconcat ["Unhandled response from server: ", T.pack . show $ H.responseStatus res]
+    BorisHttpClientVoltError r ->
+      mconcat ["Unhandled exception: ", T.pack . show $ r]

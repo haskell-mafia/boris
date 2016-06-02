@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import           BuildInfo_ambiata_boris_client
+import           DependencyInfo_ambiata_boris_client
 
 import           Boris.Core.Data
 import           Boris.Store.Build (BuildData (..), LogData (..))
@@ -12,6 +13,7 @@ import qualified Boris.Client.Log as L
 
 import           Control.Concurrent.Async (async, waitEitherCancel)
 import           Control.Concurrent (threadDelay)
+import           Control.Retry (exponentialBackoff, limitRetries)
 import           Control.Monad.IO.Class (liftIO)
 
 import           Data.Conduit (($$))
@@ -38,6 +40,9 @@ import           Snooze.Balance.Control (BalanceConfig (..))
 import           System.Exit (exitSuccess, exitFailure)
 import           System.Environment (lookupEnv)
 import           System.IO
+
+import           Volt.Data.Config (VoltConfig (..))
+import qualified Volt.Data.Config as Volt
 
 import           X.Options.Applicative
 import           X.Control.Monad.Trans.Either (newEitherT, runEitherT)
@@ -66,6 +71,8 @@ main = do
     case sc of
       VersionCommand ->
         putStrLn buildInfoVersion >> exitSuccess
+      DependencyCommand ->
+        mapM putStrLn dependencyInfo >> exitSuccess
       RunCommand DryRun c ->
         print c >> exitSuccess
       RunCommand RealRun c ->
@@ -159,8 +166,8 @@ run e c = case c of
     exitSuccess
 
   Cancel i -> do
-    bc <- mkBalanceConfig
-    void . orDie renderBorisHttpClientError $ B.cancel bc i
+    vc <- mkVoltConfig
+    void . orDie renderBorisHttpClientError $ B.cancel vc i
     T.putStrLn . mconcat $ ["Cancelled build #", renderBuildId i]
     exitSuccess
 
@@ -268,6 +275,13 @@ mkBalanceConfig = do
   p <- Port <$> intOr "PORT" 11111
   t <- balanceTableStatic . BalanceTable (BalanceEntry h p) $ []
   pure $ BalanceConfig t mempty mgr
+
+mkVoltConfig :: IO VoltConfig
+mkVoltConfig = do
+  ms <- getManagerSettings
+  mgr <- newManager ms
+  let re = exponentialBackoff 200000 {- 0.2s -} <> limitRetries 5
+  pure $ VoltConfig mgr re Volt.BalanceTable
 
 socksProxyKey :: String
 socksProxyKey =

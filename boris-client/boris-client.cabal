@@ -81,6 +81,7 @@ executable boris
                     , ambiata-p
                     , ambiata-snooze
                     , ambiata-snooze-baton
+                    , ambiata-volt
                     , ambiata-x-optparse
                     , ambiata-x-eithert
                     , async
@@ -92,6 +93,7 @@ executable boris
                     , http-client-tls                 == 0.2.2.*
                     , old-locale
                     , optparse-applicative            == 0.11.*
+                    , retry                           == 0.7.*
                     , text
                     , time
                     , transformers

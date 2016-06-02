@@ -22,6 +22,8 @@ import           Snooze.Balance.Control (BalanceConfig)
 
 import           System.IO (IO)
 
+import           Volt.Data.Config (VoltConfig)
+
 import           X.Control.Monad.Trans.Either (EitherT)
 
 trigger :: BalanceConfig -> Project -> Build -> Maybe Ref -> EitherT BorisHttpClientError IO BuildData
@@ -34,7 +36,7 @@ fetch c i =
   (fmap . fmap) getBuild $
     H.get c ["build", renderBuildId i]
 
-cancel :: BalanceConfig -> BuildId -> EitherT BorisHttpClientError IO ()
+cancel :: VoltConfig -> BuildId -> EitherT BorisHttpClientError IO ()
 cancel c i =
   H.delete c ["build", renderBuildId i]
 
