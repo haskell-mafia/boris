@@ -34,7 +34,7 @@ bare sout serr r target = do
   let local = LocalRepository $ T.pack  target
   unlessM (liftIO $ doesDirectoryExist target) . X.hoistExitM $
     X.exec sout serr =<<
-      X.xproc sout "git" ["clone", "--mirror", renderRepository r, T.pack target]
+      X.xproc sout "git" ["clone", "--mirror", "--depth=1", renderRepository r, T.pack target]
   pure local
 
 clone :: Out -> Out -> LocalRepository -> FilePath -> EitherT ExitCode IO LocalRepository
@@ -42,7 +42,7 @@ clone sout serr r target = do
   let local = LocalRepository $ T.pack  target
   X.hoistExitM $
     X.exec sout serr =<<
-      X.xproc sout "git" ["clone", renderLocalRepository r, T.pack target]
+      X.xproc sout "git" ["clone", "--depth=1", renderLocalRepository r, T.pack target]
   pure local
 
 cloneref :: Out -> Out -> LocalRepository -> Repository -> FilePath -> EitherT ExitCode IO LocalRepository
@@ -50,7 +50,7 @@ cloneref sout serr l r target = do
   let local = LocalRepository $ T.pack  target
   X.hoistExitM $
     X.exec sout serr =<<
-      X.xproc sout "git" ["clone", "--reference", renderLocalRepository l, renderRepository r, T.pack target]
+      X.xproc sout "git" ["clone", "--reference", renderLocalRepository l, "--depth=1", renderRepository r, T.pack target]
   pure local
 
 checkout :: Out -> Out -> LocalRepository -> Ref -> EitherT ExitCode IO ()
