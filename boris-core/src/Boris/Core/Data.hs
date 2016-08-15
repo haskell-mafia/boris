@@ -30,6 +30,7 @@ module Boris.Core.Data (
   , repositoryOfMirror
   , repositoryOfWorkingCopy
   , sortBuildIds
+  , cmpBuildIds
   ) where
 
 import qualified Data.List as L
@@ -189,3 +190,10 @@ pathOf w =
 sortBuildIds :: [BuildId] -> [BuildId]
 sortBuildIds =
   fmap (BuildId . T.pack . show) . L.reverse . L.sort . catMaybes . fmap ((readMaybe :: [Char] -> Maybe Int) . T.unpack . renderBuildId)
+
+cmpBuildIds :: BuildId -> BuildId -> Ordering
+cmpBuildIds b1 b2 =
+  let resolve = (readMaybe :: [Char] -> Maybe Int) . T.unpack . renderBuildId in
+  case ((,) <$> resolve b1 <*> resolve b2) of
+    Nothing -> compare (renderBuildId b1) (renderBuildId b2)
+    Just (b1', b2') -> compare b1' b2'
