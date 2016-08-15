@@ -20,7 +20,7 @@ import           BMX (BMXError, renderBMXError)
 import           BMX (Template, renderPage, renderTemplate, templateFile)
 import           BMX (BMXValue (..), defaultState, usingContext)
 
-import           Boris.Core.Data (Project (..), Build (..), Commit (..), Ref (..), BuildId (..), BuildResult (..), sortBuildIds)
+import           Boris.Core.Data (Project (..), Build (..), Commit (..), Ref (..), BuildId (..), BuildResult (..), sortBuildIds, cmpBuildIds)
 import           Boris.Store.Build (BuildData (..))
 import           Boris.Http.Airship (webT)
 import           Boris.Http.Data (ClientLocale (..))
@@ -86,7 +86,7 @@ builds p b rs queued =
   let
     prepped :: [(Text, BMXValue)]
     prepped =
-      fmap (\(r, is) -> (renderRef r, BMXList $ (BMXString . renderBuildId) <$> sortBuildIds is)) rs
+      fmap (\(r, is) -> (renderRef r, BMXList $ (BMXString . renderBuildId) <$> sortBuildIds is)) $ sortRefs rs
 
     context = [
         ("project", BMXString (renderProject p))
@@ -96,6 +96,16 @@ builds p b rs queued =
       ]
   in
     renderPage <$> renderTemplate (defaultState `usingContext` context) builds'
+
+sortRefs :: [(Ref, [Build])] -> [(Ref, [Build])]
+sortRefs rs =
+  let
+    rbs = (head . sortBuildIds . snd) <$> rs
+    yes = fmap snd . L.sortBy (cmpBuildIds . fst) $
+            [(lb, x) | (x, Just lb) <- (zip rs rbs)]
+    no = [x | (x, Nothing) <- (zip rs rbs)]
+  in
+    yes <> no
 
 commit :: Project -> Commit -> [BuildData] -> Either BMXError Text
 commit p c bs =
