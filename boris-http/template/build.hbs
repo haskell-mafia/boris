@@ -29,7 +29,7 @@
             <div>build: <a href="/project/{{project}}/build/{{build}}">{{build}}</a></div>
             <div>{{#if ref}}ref: {{ref}}{{/if}}</div>
             <div>{{#if commit}}commit: <a href="/project/{{project}}/commit/{{commit}}">{{commit}}</a>{{/if}}</div>
-            <div>{{#if commit}}github: <a href="https://github.com/ambiata/{{project}}/commit/{{commit}}">{{commit}}</a>{{/if}}</div>
+            <div>{{#if organisation}}github: <a href="https://github.com/{{organisation}}/{{project}}/commit/{{commit}}">{{commit}}</a>{{/if}}</div>
             <div>{{#if queued}}queued at: {{queued}}{{/if}}</div>
             <div>{{#if started}}started at: {{started}}{{/if}}</div>
             <div>{{#if ended}}ended at: {{ended}}{{/if}}</div>

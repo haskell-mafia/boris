@@ -28,6 +28,7 @@ library
                     , ambiata-p
                     , ambiata-x-aeson
                     , ambiata-x-eithert
+                    , attoparsec                      >= 0.12       && < 0.14
                     , blaze-html                      == 0.8.*
                     , blaze-builder                   == 0.4.*
                     , bytestring                      == 0.10.*

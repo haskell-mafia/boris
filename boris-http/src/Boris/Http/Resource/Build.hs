@@ -84,7 +84,7 @@ collection env e q c =
           p <- getProject
           r <- getPostBuildsRef <$> decodeJsonBody
           i <- buildPost env e q c b p r
-          putResponseBody . jsonResponse $ GetBuild (BuildData i p b Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+          putResponseBody . jsonResponse $ GetBuild (BuildData i p Nothing b Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
           setLocation ["builds"]
           pure $ PostResponseLocation [renderBuildId i]
 
@@ -109,7 +109,7 @@ buildPost :: Env -> Environment -> BuildQueue -> ConfigLocation -> Build -> Proj
 buildPost env e q c b p r = do
   repository <- webT renderConfigError (pick env c p) >>= notfound
   i <- webT id . runAWST env renderError . bimapEitherT ST.renderTickError id $ ST.next e p b
-  webT id . runAWST env renderError . bimapEitherT SB.renderRegisterError id $ SB.register e p b i
+  webT id . runAWST env renderError . bimapEitherT SB.renderRegisterError id $ SB.register e p repository b i
   let
     normalised = flip fmap r $ \rr ->
       if T.isPrefixOf "refs/" . renderRef $ rr then rr else Ref . ((<>) "refs/heads/") . renderRef $ rr
