@@ -92,6 +92,7 @@ instance FromJSON GetBuild where
         BuildData
           <$> (fmap BuildId $ o .: "build_id")
           <*> (fmap Project $ o .: "project")
+          <*> ((fmap . fmap) Repository $ o .: "repository")
           <*> (fmap Build $ o .: "build")
           <*> ((fmap . fmap) Ref $ o .:? "ref")
           <*> ((fmap . fmap) Commit $ o .:? "commit")

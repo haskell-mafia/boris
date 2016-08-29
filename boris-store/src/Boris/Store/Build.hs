@@ -75,6 +75,7 @@ data BuildData =
   BuildData {
       buildDataId :: BuildId
     , buildDataProject :: Project
+    , buildDataRepository :: Maybe Repository
     , buildDataBuild :: Build
     , buildDataRef :: Maybe Ref
     , buildDataCommit :: Maybe Commit
@@ -97,6 +98,7 @@ fetch e i = newEitherT $ do
       Just False
   pure $ BuildData i
     <$> (maybe (Left $ MissingProject i) Right $ res ^? D.girsItem . ix kProject . D.avS . _Just . to Project)
+    <*> (pure $ res ^? D.girsItem . ix kProject . D.avS . _Just . to Repository)
     <*> (maybe (Left $ MissingBuild i) Right $ res ^? D.girsItem . ix kBuild . D.avS . _Just . to Build)
     <*> (Right $ res ^? D.girsItem . ix kRef . D.avS . _Just . to Ref)
     <*> (Right $ res ^? D.girsItem . ix kCommit . D.avS . _Just . to Commit)
@@ -112,8 +114,8 @@ blat :: Text -> Maybe UTCTime
 blat =
   parseTimeM True defaultTimeLocale "%Y-%m-%dT%H:%M:%S" . T.unpack
 
-register :: Environment -> Project -> Build -> BuildId -> EitherT RegisterError AWS ()
-register e p b i = do
+register :: Environment -> Project -> Repository -> Build -> BuildId -> EitherT RegisterError AWS ()
+register e p repo b i = do
   now <- liftIO getCurrentTime
   newEitherT $ handling D._ConditionalCheckFailedException (const . pure . Left $ BuildIdAlreadyRegistered e p b i) . fmap (const $ Right ()) $ A.send $ D.putItem (tBuild e)
     & D.piItem .~ H.fromList [
@@ -121,6 +123,7 @@ register e p b i = do
       , vTime kQueueTime now
       , vProject p
       , vBuild b
+      , vRepository repo
       ]
     & D.piConditionExpression .~ (Just . mconcat $ ["attribute_not_exists(", kProjectBuild, ") AND attribute_not_exists(", kBuildId, ")"])
   lift $ addQueued e p b i

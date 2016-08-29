@@ -23,6 +23,7 @@ module Boris.Store.Schema (
   , kBuildIdState
   , kRef
   , kRefs
+  , kRepository
   , kDisabled
   , kCommit
   , kCommits
@@ -41,6 +42,7 @@ module Boris.Store.Schema (
   , vBuild
   , vBuildId
   , vBuildResult
+  , vRepository
   , vRef
   , vCommit
   , vRefOf
@@ -93,6 +95,7 @@ tTick e =
 -- Attributes:
 --  kProject :: String
 --  kBuild :: String
+--  kRepository :: String
 --  kRef :: String
 --  kCommit :: String
 --  kQueueTime :: String
@@ -259,6 +262,10 @@ kRefs :: Text
 kRefs =
   "refs"
 
+kRepository :: Text
+kRepository =
+  "repository"
+
 kDisabled :: Text
 kDisabled =
   "disabled"
@@ -310,6 +317,10 @@ vBuildId i =
 vBuildResult :: Text -> BuildResult -> (Text, D.AttributeValue)
 vBuildResult k v =
   (k, D.attributeValue & D.avBOOL .~ Just (case v of BuildOk -> True; BuildKo -> False))
+
+vRepository :: Repository -> (Text, D.AttributeValue)
+vRepository r =
+  (kRepository, D.attributeValue & D.avS .~ Just (renderRepository r))
 
 vRef :: Ref -> (Text, D.AttributeValue)
 vRef =

@@ -20,12 +20,14 @@ import           BMX (BMXError, renderBMXError)
 import           BMX (Template, renderPage, renderTemplate, templateFile)
 import           BMX (BMXValue (..), defaultState, usingContext)
 
-import           Boris.Core.Data (Project (..), Build (..), Commit (..), Ref (..), BuildId (..), BuildResult (..), sortBuildIds)
+import           Boris.Core.Data (Project (..), Repository (..), Build (..), Commit (..), Ref (..), BuildId (..))
+import           Boris.Core.Data (BuildResult (..), sortBuildIds)
 import           Boris.Store.Build (BuildData (..))
 import           Boris.Http.Airship (webT)
 import           Boris.Http.Data (ClientLocale (..))
 import           Boris.Queue (QueueSize (..))
 
+import qualified Data.Attoparsec.Text as AT
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Data.Time (UTCTime, ZonedTime(..), diffUTCTime, formatTime, defaultTimeLocale)
@@ -121,6 +123,7 @@ build l b =
       , ("build", BMXString (renderBuild . buildDataBuild $ b))
       , ("id", BMXString (renderBuildId . buildDataId $ b))
       , ("ref", maybe BMXNull (BMXString . renderRef) . buildDataRef $ b)
+      , ("organisation", maybe BMXNull (BMXString . renderRepository) . buildDataRepository $ b) -- TODO stringy
       , ("commit", maybe BMXNull (BMXString . renderCommit) . buildDataCommit $ b)
       , ("queued", maybe BMXNull (BMXString . renderTime l) . buildDataQueueTime $ b)
       , ("started", maybe BMXNull (BMXString . renderTime l) . buildDataStartTime $ b)
@@ -136,6 +139,16 @@ build l b =
       ]
   in
     renderPage <$> renderTemplate (defaultState `usingContext` context) build'
+
+-- Should this validate project as well?
+parseOrganisation :: Repository -> Maybe Text
+parseOrganisation r =
+  rightToMaybe . AT.parseOnly $ do
+    _ <- AT.string "git@github.com:"
+    o <- AT.manyTill anyChar (chat '/')
+
+
+
 
 renderTime :: ClientLocale -> UTCTime -> Text
 renderTime (ClientLocale tz) t =
