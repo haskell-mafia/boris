@@ -39,3 +39,6 @@ scoreboardHtml bs = let
       H.head $
         H.meta ! HA.httpEquiv "refresh" ! HA.content "60"
       H.body ! HA.style ("background-color: " <> colour <> ";") $ ""
+      case allOk of
+        False -> H.div ! HA.style ("font-size: 360px; color:white; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(90deg);") $ ":("
+        True -> ""
