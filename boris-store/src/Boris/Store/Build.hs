@@ -78,6 +78,7 @@ data BuildData =
     , buildDataBuild :: Build
     , buildDataRef :: Maybe Ref
     , buildDataCommit :: Maybe Commit
+    , buildDataCommitUrl :: Maybe CommitUrl
     , buildDataQueueTime :: Maybe UTCTime
     , buildDataStartTime :: Maybe UTCTime
     , buildDataEndTime :: Maybe UTCTime
@@ -100,6 +101,7 @@ fetch e i = newEitherT $ do
     <*> (maybe (Left $ MissingBuild i) Right $ res ^? D.girsItem . ix kBuild . D.avS . _Just . to Build)
     <*> (Right $ res ^? D.girsItem . ix kRef . D.avS . _Just . to Ref)
     <*> (Right $ res ^? D.girsItem . ix kCommit . D.avS . _Just . to Commit)
+    <*> (Right $ res ^? D.girsItem . ix kCommitUrl . D.avS . _Just . to CommitUrl)
     <*> (forM (res ^? D.girsItem . ix kQueueTime . D.avS . _Just) $ fromMaybeM (Left $ InvalidQueueTime i) . blat)
     <*> (forM (res ^? D.girsItem . ix kStartTime . D.avS . _Just) $ fromMaybeM (Left $ InvalidStartTime i) . blat)
     <*> (forM (res ^? D.girsItem . ix kEndTime . D.avS . _Just) $ fromMaybeM (Left $ InvalidEndTime i) . blat)
@@ -112,16 +114,16 @@ blat :: Text -> Maybe UTCTime
 blat =
   parseTimeM True defaultTimeLocale "%Y-%m-%dT%H:%M:%S" . T.unpack
 
-register :: Environment -> Project -> Build -> BuildId -> EitherT RegisterError AWS ()
-register e p b i = do
+register :: Environment -> Project -> Build -> BuildId -> Maybe CommitUrl -> EitherT RegisterError AWS ()
+register e p b i cu = do
   now <- liftIO getCurrentTime
   newEitherT $ handling D._ConditionalCheckFailedException (const . pure . Left $ BuildIdAlreadyRegistered e p b i) . fmap (const $ Right ()) $ A.send $ D.putItem (tBuild e)
-    & D.piItem .~ H.fromList [
+    & D.piItem .~ H.fromList ([
         vBuildId i
       , vTime kQueueTime now
       , vProject p
       , vBuild b
-      ]
+      ] <> maybe [] (pure . vCommitUrl) cu)
     & D.piConditionExpression .~ (Just . mconcat $ ["attribute_not_exists(", kProjectBuild, ") AND attribute_not_exists(", kBuildId, ")"])
   lift $ addQueued e p b i
 
@@ -129,7 +131,7 @@ index :: Environment -> Project -> Build -> BuildId -> Ref -> Commit -> AWS ()
 index e p b i r c = do
   -- NOTE: We don't want to index these before acknowledge because we wouldn't of validated
   --       the project against a refs-config, which means indexing it earlier could result
-  --       in rubish builds being reported that should never of been allowed through.
+  --       in rubbish builds being reported that should never have been allowed through.
   liftIO . T.putStrLn $ "clear-queue"
   clearQueued e p b i
   liftIO . T.putStrLn $ "add-project"

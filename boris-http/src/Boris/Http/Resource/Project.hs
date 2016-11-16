@@ -80,9 +80,9 @@ item env e q c =
     , processPost = processPostMedia . withVersionJson $ \v -> case v of
         V1 -> do
           p <- getProject
-          repository <- webT renderConfigError (pick env c p) >>= notfound
+          registration <- webT renderConfigError (pick env c p) >>= notfound
           i <- webT id . runAWST env renderError . bimapEitherT ST.renderTickError id $ ST.next e p (Build ":discover:")
-          let req = RequestDiscover' $ RequestDiscover i p repository
+          let req = RequestDiscover' $ RequestDiscover i p (registrationRepository registration)
           webT renderError . runAWS env $ Q.put q req
           halt HTTP.status202
     }

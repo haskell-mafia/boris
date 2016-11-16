@@ -22,18 +22,18 @@ import           Test.Mismi (testAWS)
 
 import           X.Control.Monad.Trans.Either (runEitherT)
 
-prop_store i p b r =
+prop_store i p b r reg =
   forAll (elements cooking) $ \l ->
     once . testAWS . withClean environment (SB.delete environment i >> SB.deindex environment p b i) $ do
-      void . runEitherT $ SB.register environment p b i
+      void . runEitherT $ SB.register environment p b i reg
       a <- SB.acknowledge environment i (LogGroup l) (LogStream l)
       SB.complete environment i r
       pure $ a === Accept
 
-prop_store_heartbeat i p b =
+prop_store_heartbeat i p b reg =
   forAll (elements cooking) $ \l ->
     once . testAWS . withClean environment (SB.delete environment i >> SB.deindex environment p b i) $ do
-      void . runEitherT $ SB.register environment p b i
+      void . runEitherT $ SB.register environment p b i reg
       x0 <- SB.acknowledge environment i (LogGroup l) (LogStream l)
       x1 <- SB.heartbeat environment i
       x2 <- SB.cancel environment i

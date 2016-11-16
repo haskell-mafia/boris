@@ -85,7 +85,7 @@ collection env e q c =
           p <- getProject
           r <- getPostBuildsRef <$> decodeJsonBody
           i <- buildPost env e q c b p r
-          putResponseBody . jsonResponse $ GetBuild (BuildData i p b Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+          putResponseBody . jsonResponse $ GetBuild (BuildData i p b Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
           setLocation ["builds"]
           pure $ PostResponseLocation [renderBuildId i]
 
@@ -108,13 +108,13 @@ collection env e q c =
 
 buildPost :: Env -> Environment -> BuildQueue -> ConfigLocation -> Build -> Project -> Maybe Ref -> Webmachine IO BuildId
 buildPost env e q c b p r = do
-  repository <- webT renderConfigError (pick env c p) >>= notfound
+  registration <- webT renderConfigError (pick env c p) >>= notfound
   i <- webT id . runAWST env renderError . bimapEitherT ST.renderTickError id $ ST.next e p b
-  webT id . runAWST env renderError . bimapEitherT SB.renderRegisterError id $ SB.register e p b i
+  webT id . runAWST env renderError . bimapEitherT SB.renderRegisterError id $ SB.register e p b i (registrationCommitUrl registration)
   let
     normalised = flip fmap r $ \rr ->
       if T.isPrefixOf "refs/" . renderRef $ rr then rr else Ref . ((<>) "refs/heads/") . renderRef $ rr
-    req = RequestBuild' $ RequestBuild i p repository b normalised
+    req = RequestBuild' $ RequestBuild i p (registrationRepository registration) b normalised
   webT renderError . runAWS env $ Q.put q req
   pure i
 

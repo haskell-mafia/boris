@@ -42,7 +42,7 @@ EOF
 
 LOCAL_BORIS_CONFIG="$LOCAL_TMP/conf"
 cat > "$LOCAL_BORIS_CONFIG" <<EOF
-demo=$(cd "$LOCAL_GIT" >/dev/null 2>&1 && pwd)
+demo=$(cd "$LOCAL_GIT" >/dev/null 2>&1 && pwd),https://github.com/ambiata/boris/commit
 EOF
 
 aws s3 cp "$LOCAL_BORIS_CONFIG" "$BORIS_CONFIG_LOCATION"

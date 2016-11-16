@@ -26,6 +26,7 @@ module Boris.Store.Schema (
   , kDisabled
   , kCommit
   , kCommits
+  , kCommitUrl
   , kQueued
   , kStartTime
   , kEndTime
@@ -43,6 +44,7 @@ module Boris.Store.Schema (
   , vBuildResult
   , vRef
   , vCommit
+  , vCommitUrl
   , vRefOf
   , vCommitOf
   , vLogGroup
@@ -95,6 +97,7 @@ tTick e =
 --  kBuild :: String
 --  kRef :: String
 --  kCommit :: String
+--  kCommitUrl :: String
 --  kQueueTime :: String
 --  kStartTime :: String
 --  kEndTime :: String
@@ -263,6 +266,10 @@ kDisabled :: Text
 kDisabled =
   "disabled"
 
+kCommitUrl :: Text
+kCommitUrl =
+  "commiturl"
+
 kCommit :: Text
 kCommit =
   "commitx"
@@ -318,6 +325,10 @@ vRef =
 vCommit :: Commit -> (Text, D.AttributeValue)
 vCommit =
   vCommitOf kCommit
+
+vCommitUrl :: CommitUrl -> (Text, D.AttributeValue)
+vCommitUrl r =
+  (kCommitUrl, D.attributeValue & D.avS .~ Just (renderCommitUrl r))
 
 vRefOf :: Text -> Ref -> (Text, D.AttributeValue)
 vRefOf k r =
