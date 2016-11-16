@@ -85,7 +85,7 @@ discover env e q w request = do
             newId <- runAWST env DiscoverAwsError . bimapEitherT DiscoverTickError id $
               ST.next e project build
             _ <- runAWST env DiscoverAwsError . bimapEitherT DiscoverRegisterError id $
-              SB.register e project build newId
+              SB.register e project build newId Nothing
             X.xPutStrLn out $ mconcat [
                 "New commit, triggering build"
               , ": project = ", renderProject project

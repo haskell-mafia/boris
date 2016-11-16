@@ -51,6 +51,10 @@ instance Arbitrary Commit where
   arbitrary =
     Commit <$> elements cooking
 
+instance Arbitrary CommitUrl where
+  arbitrary =
+    CommitUrl <$> elements muppets
+
 instance Arbitrary Pattern where
   arbitrary =
     Pattern <$> elements cooking

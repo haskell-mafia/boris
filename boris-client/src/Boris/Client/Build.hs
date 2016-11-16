@@ -95,6 +95,7 @@ instance FromJSON GetBuild where
           <*> (fmap Build $ o .: "build")
           <*> ((fmap . fmap) Ref $ o .:? "ref")
           <*> ((fmap . fmap) Commit $ o .:? "commit")
+          <*> ((fmap . fmap) CommitUrl $ o .:? "commiturl")
           <*> (o .:? "queued")
           <*> (o .:? "started")
           <*> (o .:? "completed")
