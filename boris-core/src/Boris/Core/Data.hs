@@ -10,6 +10,7 @@ module Boris.Core.Data (
   , Repository (..)
   , LocalRepository (..)
   , Commit (..)
+  , CommitUrl (..)
   , Ref (..)
   , Pattern (..)
   , Executor (..)
@@ -96,6 +97,11 @@ newtype Commit =
       renderCommit :: Text
     } deriving (Eq, Show, Ord)
 
+newtype CommitUrl =
+  CommitUrl {
+      renderCommitUrl :: Text
+    } deriving (Eq, Show)
+
 newtype WorkspacePath =
   WorkspacePath {
       renderWorkspacePath :: Text
@@ -152,6 +158,7 @@ data Registration =
   Registration {
       registrationProject :: Project
     , registrationRepository :: Repository
+    , registrationCommitUrl :: Maybe CommitUrl
     } deriving (Eq, Show)
 
 data BuildResult =
@@ -170,11 +177,20 @@ renderRegistration r =
 
 parseRegistration :: Text -> Maybe Registration
 parseRegistration t =
-  case T.splitOn "=" t of
-    [p,r] ->
-      Just $ Registration (Project p) (Repository r)
+  case T.splitOn "," t of
+    [pr,cu] ->
+      case T.splitOn "=" pr of
+        [p,r] ->
+          Just $ Registration (Project p) (Repository r) (Just . CommitUrl $ cu)
+        _ ->
+          Nothing
     _ ->
-      Nothing
+      case T.splitOn "=" t of
+        [p,r] ->
+          Just $ Registration (Project p) (Repository r) Nothing
+        _ ->
+          Nothing
+
 
 pathOfMirror :: Workspace -> FilePath
 pathOfMirror =

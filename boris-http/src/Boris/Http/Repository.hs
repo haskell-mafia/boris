@@ -34,7 +34,7 @@ data ConfigError =
   | ConfigAwsError Error
   | ConfigParseError Text
 
-pick :: Env -> ConfigLocation -> Project -> EitherT ConfigError IO (Maybe Repository)
+pick :: Env -> ConfigLocation -> Project -> EitherT ConfigError IO (Maybe Registration)
 pick env location project = do
   registration <- runAWST env ConfigAwsError $ do
     attempt <- lift $ S3.read' (configLocationAddress location)
@@ -47,8 +47,7 @@ pick env location project = do
       $=+ CL.filter ((==) project . registrationProject)
       $$+- CL.head
 
-  pure $ registrationRepository <$> registration
-
+  pure $ registration
 
 list :: Env -> ConfigLocation -> EitherT ConfigError IO [Project]
 list env location =
