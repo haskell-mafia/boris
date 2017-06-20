@@ -179,7 +179,12 @@ fetch e = do
 compress :: Environment -> EitherT JsonError AWS [Result]
 compress e = do
   rs <- fetch e
-  compressResults e rs
+
+  case length rs > 100 of
+    False ->
+      pure rs
+    True ->
+      compressResults e rs
 
 compressResults :: Environment -> [Result] -> EitherT JsonError AWS [Result]
 compressResults e rs = do
