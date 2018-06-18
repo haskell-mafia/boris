@@ -49,6 +49,7 @@
             <div>{{#if duration}}duration: {{duration}}{{/if}}</div>
             <div>{{#if result}}result: {{result}}{{/if}}</div>
             <div class="version hidden">version: ???</div>
+            <div class="package hidden">package<a href="s3://">......</a></div>
             <div>
               <form action="/project/{{project}}/build/{{build}}" method="post">
                 <button class="btn" type="submit">build again</button>
@@ -75,18 +76,31 @@
           xhr.open('GET', '/build/{{id}}/log');
           xhr.setRequestHeader('Accept', 'text/plain');
           xhr.onload = function() {
-            var regexp = /aws s3.*cp.*dist\/build\/.*\/(\d\.\d\.\d-\d{14}-[0-9a-f]{7})\//g;
-            var match = regexp.exec(this.responseText);
+            // version sample:
+            //
+            // dist sample:
+            //  upload: ../tmp/I46sT1uZUxrV/xxxxxxxx-20180615094954-3523e1e.tgz to s3://our-dispensary-v2/dist/branches/xxxxxxxx/20180615094954-3523e1e/xxxxxxxx-20180615094954-3523e1e.tgz
+            var regexpVer = /aws s3.*cp.*dist\/build\/.*\/(\d\.\d\.\d-\d{14}-[0-9a-f]{7})\//g;
+            var regexpUrl = /upload: [^ ]+ to (s3:\/\/[^\/]+\/dist\/[^\/]+\/[^\/]+\/[^\/]+\/(.*\d{14}-[0-9a-f]{7}.*))/g;
 
-            if (match === null)
-              return;
+            var matchVer = regexpVer.exec(this.responseText);
+            if (matchVer) {
+              var version = 'version: ' + matchVer[1];
 
-            var version = 'version: ' + match[1];
+              document.querySelectorAll('div.version').forEach(function(div) {
+                div.innerText = version;
+                div.classList.remove('hidden');
+              });
+            }
 
-            document.querySelectorAll('.version').forEach(function(div) {
-              div.innerText = version;
-              div.classList.remove('hidden');
-            });
+            var matchUrl = regexpUrl.exec(this.responseText);
+            if (matchUrl) {
+              document.querySelectorAll('div.package a').forEach(function(link) {
+                link.href = matchUrl[1];
+                link.innerText = matchUrl[2];
+                link.parentElement.classList.remove('hidden');
+              });
+            }
           };
           xhr.send();
         </script>
