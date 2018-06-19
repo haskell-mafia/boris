@@ -49,7 +49,7 @@
             <div>{{#if duration}}duration: {{duration}}{{/if}}</div>
             <div>{{#if result}}result: {{result}}{{/if}}</div>
             <div class="version hidden">version: ???</div>
-            <div class="package hidden">package<a href="s3://">......</a></div>
+            <div class="package hidden">package: <a href="s3://">......</a></div>
             <div>
               <form action="/project/{{project}}/build/{{build}}" method="post">
                 <button class="btn" type="submit">build again</button>
